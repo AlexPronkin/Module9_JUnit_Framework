@@ -1,0 +1,14 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+.idea/
+.idea_modules/
+*.iml
+*.ipr
+*.iws
+*.jar
+*.war
+*.ear
+*.nar
+# Project exclude paths
+/target/
