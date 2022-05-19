@@ -10,9 +10,11 @@ import pages.HomePage;
 import pages.PaymentPage;
 import pages.ProductPage;
 import pages.SearchPage;
+import org.assertj.core.api.SoftAssertions;
+
+import java.time.Duration;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class BookDepositoryTests {
 
@@ -27,11 +29,14 @@ public class BookDepositoryTests {
 
     static String HOME_URL = "https://www.bookdepository.com/";
     static String STANDARD_PRODUCT_1 = "s/9780131872486";
+    static String STANDARD_PRODUCT_1_PRICE = "78,61";
 
     @Before
     public void setup() {
+        System.setProperty("webdriver.chrome.driver", "src/main/resources/chromedriver.exe");
         driver = new ChromeDriver();
         driver.manage().window().maximize();
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
         pageFactoryManager = new PageFactoryManager(driver);
         homePage = pageFactoryManager.getHomePage();
         searchPage = pageFactoryManager.getSearchPage();
@@ -41,45 +46,25 @@ public class BookDepositoryTests {
     }
 
     @Test
-    public void isLogoDisplayedOnHomePage() {
+    public void isMainElementsDisplayedOnHomePage() {
         BasePage.openPage(HOME_URL);
-        assertTrue(homePage.isLogoDisplayed());
-    }
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(homePage.isLogoDisplayed())
+                    .withFailMessage("Logo not displayed").isTrue();
+            softly.assertThat(homePage.isSignInButtonDisplayed())
+                    .withFailMessage("Sign In Button not displayed").isTrue();
+            softly.assertThat(searchPage.isItemCountInCartDisplayed())
+                    .withFailMessage("Item Count In Cart not displayed").isTrue();
+            softly.assertThat(homePage.isCartButtonDisplayed())
+                    .withFailMessage("Cart Button not displayed").isTrue();
+            softly.assertThat(homePage.isSearchFieldDisplayed())
+                    .withFailMessage("Search Field not displayed").isTrue();
+            softly.assertThat(homePage.isNavigationMenuDisplayed())
+                    .withFailMessage("Navigation Menu not displayed").isTrue();
+            softly.assertThat(homePage.isBannerDisplayed())
+                    .withFailMessage("Banner not displayed").isTrue();
+        });
 
-    @Test
-    public void isSignInButtonDisplayedOnHomePage() {
-        BasePage.openPage(HOME_URL);
-        assertTrue(homePage.isSignInButtonDisplayed());
-    }
-
-    @Test
-    public void isItemCountInCartDisplayedOnHomePage() {
-        BasePage.openPage(HOME_URL);
-        assertTrue(searchPage.isItemCountInCartDisplayed());
-    }
-
-    @Test
-    public void isCartButtonDisplayedOnHomePage() {
-        BasePage.openPage(HOME_URL);
-        assertTrue(homePage.isCartButtonDisplayed());
-    }
-
-    @Test
-    public void isSearchFieldDisplayedOnHomePage() {
-        BasePage.openPage(HOME_URL);
-        assertTrue(homePage.isSearchFieldDisplayed());
-    }
-
-    @Test
-    public void isNavigationMenuDisplayedOnHomePage() {
-        BasePage.openPage(HOME_URL);
-        assertTrue(homePage.isNavigationMenuDisplayed());
-    }
-
-    @Test
-    public void isBannerDisplayedOnHomePage() {
-        BasePage.openPage(HOME_URL);
-        assertTrue(homePage.isBannerDisplayed());
     }
 
     @Test
@@ -93,20 +78,22 @@ public class BookDepositoryTests {
     }
 
     @Test
-    public void isProductDescriptionDisplayed() {
-        BasePage.openPage(HOME_URL + STANDARD_PRODUCT_1);
-        productPage.isProductDescriptionDisplayed();
-    }
-
-    @Test
     public void verifyTotalPriceEqualsSubtotal() {
         BasePage.openPage(HOME_URL + STANDARD_PRODUCT_1);
+        productPage.isProductDescriptionDisplayed();
         productPage.clickAddToCartButton();
         searchPage.waitVisibilityOfElement(DEFAULT_TIMEOUT, searchPage.getCheckoutButtonElement());
         searchPage.clickCheckoutButton();
         basketPage.waitVisibilityOfElement(DEFAULT_TIMEOUT, basketPage.getDefaultCheckoutButton());
         basketPage.clickDefaultCheckoutButton();
-        assertEquals(paymentPage.getItemPrice(), paymentPage.getTotalPrice());
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(paymentPage.getItemPrice())
+                    .withFailMessage("Item price isn't equal to expected")
+                    .isEqualTo(STANDARD_PRODUCT_1_PRICE);
+            softly.assertThat(paymentPage.getTotalPrice())
+                    .withFailMessage("Total price isn't equal to expected")
+                    .isEqualTo(STANDARD_PRODUCT_1_PRICE);
+        });
     }
 
     @After
